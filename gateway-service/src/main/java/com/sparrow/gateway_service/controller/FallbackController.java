@@ -1,3 +1,4 @@
+
 package com.sparrow.gateway_service.controller;
 
 import org.springframework.http.ResponseEntity;
@@ -25,60 +26,5 @@ public class FallbackController {
         response.put("status", "UP");
         response.put("service", "gateway-service");
         return ResponseEntity.ok(response);
-    }
-}
-
-// Additional configuration classes
-
-package com.sparrow.gateway_service.config;
-
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
-import reactor.core.publisher.Mono;
-
-@Configuration
-public class GatewayConfig {
-
-    @Bean("userKeyResolver")
-    public KeyResolver userKeyResolver() {
-        return exchange -> exchange.getRequest()
-                .getHeaders()
-                .getFirst("Authorization") != null 
-                    ? Mono.just(exchange.getRequest().getHeaders().getFirst("Authorization"))
-                    : Mono.just(exchange.getRequest().getRemoteAddress().toString());
-    }
-}
-
-// Circuit Breaker Configuration
-package com.sparrow.gateway_service.config;
-
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.timelimiter.TimeLimiterConfig;
-import org.springframework.cloud.circuitbreaker.resilience4j.ReactiveResilience4JCircuitBreakerFactory;
-import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigBuilder;
-import org.springframework.cloud.client.circuitbreaker.Customizer;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
-import java.time.Duration;
-
-@Configuration
-public class CircuitBreakerConfiguration {
-
-    @Bean
-    public Customizer<ReactiveResilience4JCircuitBreakerFactory> defaultCustomizer() {
-        return factory -> factory.configureDefault(id -> new Resilience4JConfigBuilder(id)
-                .circuitBreakerConfig(CircuitBreakerConfig.custom()
-                        .slidingWindowSize(10)
-                        .minimumNumberOfCalls(5)
-                        .failureRateThreshold(50)
-                        .waitDurationInOpenState(Duration.ofSeconds(10))
-                        .permittedNumberOfCallsInHalfOpenState(3)
-                        .build())
-                .timeLimiterConfig(TimeLimiterConfig.custom()
-                        .timeoutDuration(Duration.ofSeconds(5))
-                        .build())
-                .build());
     }
 }
