@@ -321,7 +321,7 @@ services:
 
   # ==== API GATEWAY ====
   api-gateway:
-    build: ./gateway-service
+    build: ./gateway-service  
     container_name: gateway-service
     volumes:
       - ./config/kafka-config.yml:/app/config/kafka-config.yml
@@ -331,12 +331,12 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       APP_NAME: gateway-service
       USER_SERVICE_URL: http://user-service:8080
+      PARCEL_SERVICE_URL: http://parcel-service:8080
+      TRACKING_SERVICE_URL: http://tracking-service:8080
+      NOTIFICATION_SERVICE_URL: http://notification-service:8080
+      LOCATION_SERVICE_URL: http://location-service:8080
       CHATBOT_SERVICE_URL: http://chatbot-service:8080
       ETA_SERVICE_URL: http://eta-service:8080
-      PARCEL_SERVICE_URL: http://parcel-service:8080
-      LOCATION_SERVICE_URL: http://location-service:8080
-      NOTIFICATION_SERVICE_URL: http://notification-service:8080
-      TRACKING_SERVICE_URL: http://tracking-service:8080
       MONGO_URI: mongodb://admin:admin123@mongo:27017/logistics_db?authSource=admin
       REDIS_HOST: redis
       REDIS_PORT: 6379
