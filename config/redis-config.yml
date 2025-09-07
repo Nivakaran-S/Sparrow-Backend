@@ -1,0 +1,62 @@
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:redis123}
+      timeout: 2000ms
+      connect-timeout: 2000ms
+      database: 0
+      ssl: false
+      lettuce:
+        pool:
+          min-idle: 0
+          max-idle: 8
+          max-active: 8
+          max-wait: -1ms
+          time-between-eviction-runs: 1m
+      jedis:
+        pool:
+          min-idle: 0
+          max-idle: 8
+          max-active: 8
+          max-wait: -1ms
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000  # 10 minutes
+      cache-null-values: false
+      key-prefix: "logistics:"
+      use-key-prefix: true
+
+# Redis Configuration for different use cases
+redis:
+  # Cache configuration
+  cache:
+    default-ttl: 3600  # 1 hour
+    user-cache-ttl: 1800  # 30 minutes
+    parcel-cache-ttl: 900   # 15 minutes
+    location-cache-ttl: 300  # 5 minutes
+    
+  # Session configuration
+  session:
+    timeout: 1800  # 30 minutes
+    
+  # Rate limiting configuration
+  rate-limit:
+    window-size: 60  # 1 minute
+    max-requests: 100
+    
+  # Pub/Sub topics
+  pubsub:
+    topics:
+      notifications: "notifications"
+      tracking-updates: "tracking:updates"
+      location-updates: "location:updates"
+      real-time-updates: "realtime:updates"
+
+logging:
+  level:
+    org.springframework.data.redis: DEBUG
+    io.lettuce.core: INFO

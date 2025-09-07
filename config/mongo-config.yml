@@ -1,0 +1,5 @@
+spring:
+  data:
+    mongodb:
+      uri: ${MONGO_URI}      # Full MongoDB Atlas URI with username & password
+      database: ${MONGO_DB_NAME:default_db}  # Optional default database

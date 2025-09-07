@@ -1,0 +1,171 @@
+{
+  "id": "logistics-realm",
+  "realm": "logistics-realm",
+  "displayName": "Logistics Realm",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 30,
+  "defaultRoles": [
+    "offline_access",
+    "uma_authorization",
+    "user"
+  ],
+  "requiredCredentials": [
+    "password"
+  ],
+  "users": [
+    {
+      "id": "admin-user",
+      "username": "admin",
+      "email": "admin@logistics.com",
+      "firstName": "Admin",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "admin",
+        "user"
+      ]
+    },
+    {
+      "id": "test-user",
+      "username": "testuser",
+      "email": "test@logistics.com",
+      "firstName": "Test",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "test123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "user"
+      ]
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "id": "admin-role",
+        "name": "admin",
+        "description": "Administrator role with full access"
+      },
+      {
+        "id": "user-role",
+        "name": "user",
+        "description": "Standard user role"
+      },
+      {
+        "id": "driver-role",
+        "name": "driver",
+        "description": "Driver role for delivery personnel"
+      },
+      {
+        "id": "manager-role",
+        "name": "manager",
+        "description": "Manager role for supervisors"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "id": "logistics-backend-client",
+      "clientId": "logistics-backend",
+      "name": "Logistics Backend Service",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "your_keycloak_client_secret",
+      "redirectUris": [
+        "http://localhost:8000/*",
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8000",
+        "http://localhost:3000"
+      ],
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "publicClient": false,
+      "frontchannelLogout": false,
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true,
+      "nodeReRegistrationTimeout": -1,
+      "defaultClientScopes": [
+        "web-origins",
+        "role_list",
+        "profile",
+        "roles",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt"
+      ]
+    },
+    {
+      "id": "logistics-frontend-client",
+      "clientId": "logistics-frontend",
+      "name": "Logistics Frontend Application",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "redirectUris": [
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000"
+      ],
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "publicClient": true,
+      "frontchannelLogout": false,
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true,
+      "nodeReRegistrationTimeout": -1,
+      "defaultClientScopes": [
+        "web-origins",
+        "role_list",
+        "profile",
+        "roles",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access"
+      ]
+    }
+  ]
+}
