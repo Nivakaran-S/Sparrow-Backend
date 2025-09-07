@@ -12,6 +12,11 @@ services:
     networks:
       - backend
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   mongo:
     image: mongo:7.0
@@ -27,6 +32,11 @@ services:
     networks:
       - backend
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # ==== REDIS ====
   redis:
@@ -40,6 +50,11 @@ services:
     networks:
       - backend
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redis123", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # ==== KAFKA SERVICES ====
   zookeeper:
@@ -55,12 +70,18 @@ services:
     networks:
       - backend
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: kafka-broker
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -82,12 +103,18 @@ services:
     networks:
       - backend
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
@@ -120,10 +147,17 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - backend
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health/ready || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
 
   # ==== SPRING BOOT SERVICES ====
   user-service:
@@ -148,12 +182,17 @@ services:
     ports:
       - "8001:8080"
     depends_on:
-      - keycloak
-      - mongo
-      - kafka
-      - redis
+      keycloak:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - backend
+    restart: unless-stopped
 
   parcel-service:
     build: ./services/parcel-service
@@ -177,12 +216,17 @@ services:
     ports:
       - "8003:8080"
     depends_on:
-      - keycloak
-      - mongo
-      - kafka
-      - redis
+      keycloak:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - backend
+    restart: unless-stopped
 
   tracking-service:
     build: ./services/tracking-service
@@ -206,12 +250,17 @@ services:
     ports:
       - "8005:8080"
     depends_on:
-      - keycloak
-      - mongo
-      - kafka
-      - redis
+      keycloak:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - backend
+    restart: unless-stopped
 
   notification-service:
     build: ./services/notification-service
@@ -235,12 +284,17 @@ services:
     ports:
       - "8006:8080"
     depends_on:
-      - keycloak
-      - mongo
-      - kafka
-      - redis
+      keycloak:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - backend
+    restart: unless-stopped
 
   location-service:
     build: ./services/location-service
@@ -264,14 +318,18 @@ services:
     ports:
       - "8007:8080"
     depends_on:
-      - keycloak
-      - mongo
-      - kafka
-      - redis
+      keycloak:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - backend
+    restart: unless-stopped
 
-  
   # ==== PYTHON SERVICES ====
   chatbot-service:
     build: ./services/chatbot-service
@@ -289,12 +347,17 @@ services:
     ports:
       - "8002:8080"
     depends_on:
-      - keycloak
-      - mongo
-      - kafka
-      - redis
+      keycloak:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - backend
+    restart: unless-stopped
 
   eta-service:
     build: ./services/eta-service
@@ -312,12 +375,17 @@ services:
     ports:
       - "8004:8080"
     depends_on:
-      - keycloak
-      - mongo
-      - kafka
-      - redis
+      keycloak:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - backend
+    restart: unless-stopped
 
   # ==== API GATEWAY ====
   api-gateway:
@@ -349,12 +417,17 @@ services:
     ports:
       - "8000:8080"
     depends_on:
-      - keycloak
-      - mongo
-      - kafka
-      - redis
+      keycloak:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - backend
+    restart: unless-stopped
 
 volumes:
   postgres_data:

@@ -1,3 +1,5 @@
+// ==========================================
+// Notification Service KafkaConsumerConfig.java
 package com.sparrow.notification_service.kafka;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -17,35 +19,32 @@ import java.util.Map;
 @EnableKafka
 public class KafkaConsumerConfig {
 
-  @Value("${spring.kafka.bootstrap-servers}")
-  private String bootstrapServers;
+    @Value("${spring.kafka.bootstrap-servers}")
+    private String bootstrapServers;
 
-  @Value("${spring.kafka.properties.security.protocol:SASL_SSL}")
-  private String securityProtocol;
-  @Value("${spring.kafka.properties.sasl.mechanism:PLAIN}")
-  private String saslMechanism;
-  @Value("${spring.kafka.properties.sasl.jaas.config:}")
-  private String jaasConfig;
-
-  @Bean
-  public ConsumerFactory<String, String> consumerFactory() {
-    Map<String, Object> props = new HashMap<>();
-    props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-    props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-    props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-    props.put(ConsumerConfig.GROUP_ID_CONFIG, "notification-service");
-    props.put("security.protocol", securityProtocol);
-    props.put("sasl.mechanism", saslMechanism);
-    if (jaasConfig != null && !jaasConfig.isBlank()) {
-      props.put("sasl.jaas.config", jaasConfig);
+    @Bean
+    public ConsumerFactory<String, String> consumerFactory() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "notification-service");
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
+        props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, 1000);
+        props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 30000);
+        props.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, 10000);
+        
+        return new DefaultKafkaConsumerFactory<>(props);
     }
-    return new DefaultKafkaConsumerFactory<>(props);
-  }
 
-  @Bean
-  public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
-    ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
-    factory.setConsumerFactory(consumerFactory());
-    return factory;
-  }
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory = 
+            new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory());
+        factory.setConcurrency(3); // Number of consumer threads
+        factory.setAutoStartup(true);
+        return factory;
+    }
 }
