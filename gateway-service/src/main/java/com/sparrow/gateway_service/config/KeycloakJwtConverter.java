@@ -23,24 +23,28 @@ public class KeycloakJwtConverter implements Converter<Jwt, Collection<GrantedAu
         if (realmAccess != null && realmAccess.containsKey("roles")) {
             @SuppressWarnings("unchecked")
             List<String> roles = (List<String>) realmAccess.get("roles");
-            authorities.addAll(roles.stream()
-                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
-                    .collect(Collectors.toList()));
+            if (roles != null) {
+                authorities.addAll(roles.stream()
+                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
+                        .collect(Collectors.toList()));
+            }
         }
 
         // Extract resource/client roles (optional)
         Map<String, Object> resourceAccess = jwt.getClaimAsMap("resource_access");
         if (resourceAccess != null) {
             resourceAccess.forEach((resource, access) -> {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> resourceMap = (Map<String, Object>) access;
-                if (resourceMap != null && resourceMap.containsKey("roles")) {
+                if (access instanceof Map) {
                     @SuppressWarnings("unchecked")
-                    List<String> resourceRoles = (List<String>) resourceMap.get("roles");
-                    if (resourceRoles != null) {
-                        authorities.addAll(resourceRoles.stream()
-                                .map(role -> new SimpleGrantedAuthority("ROLE_" + resource.toUpperCase() + "_" + role.toUpperCase()))
-                                .collect(Collectors.toList()));
+                    Map<String, Object> resourceMap = (Map<String, Object>) access;
+                    if (resourceMap != null && resourceMap.containsKey("roles")) {
+                        @SuppressWarnings("unchecked")
+                        List<String> resourceRoles = (List<String>) resourceMap.get("roles");
+                        if (resourceRoles != null) {
+                            authorities.addAll(resourceRoles.stream()
+                                    .map(role -> new SimpleGrantedAuthority("ROLE_" + resource.toUpperCase() + "_" + role.toUpperCase()))
+                                    .collect(Collectors.toList()));
+                        }
                     }
                 }
             });

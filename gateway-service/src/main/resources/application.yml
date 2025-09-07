@@ -154,7 +154,7 @@ spring:
             allowCredentials: true
             maxAge: 3600
       
-      # Circuit breaker configuration
+      # Global filters for all routes
       default-filters:
         - name: Retry
           args:
@@ -214,31 +214,55 @@ resilience4j:
         minimum-number-of-calls: 5
         failure-rate-threshold: 50
         wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
       tracking-service:
         sliding-window-size: 10
         minimum-number-of-calls: 5
         failure-rate-threshold: 50
         wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
       notification-service:
         sliding-window-size: 10
         minimum-number-of-calls: 5
         failure-rate-threshold: 50
         wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
       location-service:
         sliding-window-size: 10
         minimum-number-of-calls: 5
         failure-rate-threshold: 50
         wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
       chatbot-service:
         sliding-window-size: 10
         minimum-number-of-calls: 5
         failure-rate-threshold: 50
         wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
       eta-service:
         sliding-window-size: 10
         minimum-number-of-calls: 5
         failure-rate-threshold: 50
         wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+      admin-service:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+      manager-service:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+      driver-service:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
 
 # Management and monitoring
 management:
@@ -251,6 +275,8 @@ management:
       show-details: always
     gateway:
       enabled: true
+  security:
+    enabled: false
 
 # Logging
 logging:
@@ -259,6 +285,7 @@ logging:
     org.springframework.cloud.gateway: DEBUG
     org.springframework.security: DEBUG
     org.springframework.web: DEBUG
+    reactor.netty: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
