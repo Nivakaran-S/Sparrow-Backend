@@ -2,17 +2,31 @@
 FROM gradle:8.9-jdk17 AS build
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y ca-certificates wget unzip && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y ca-certificates wget unzip dnsutils && rm -rf /var/lib/apt/lists/*
 
-COPY build.gradle settings.gradle gradle.properties ./
+# Copy gradle files first for better caching
+COPY build.gradle settings.gradle ./
 COPY gradle ./gradle
 
-RUN gradle dependencies --refresh-dependencies
+# Download dependencies with network retry and timeout settings
+RUN gradle dependencies --refresh-dependencies \
+    --no-daemon \
+    -Dorg.gradle.jvmargs="-Xmx2g" \
+    -Dhttp.socketTimeout=60000 \
+    -Dhttp.connectionTimeout=60000 \
+    --info || \
+    (sleep 10 && gradle dependencies --refresh-dependencies \
+    --no-daemon \
+    -Dorg.gradle.jvmargs="-Xmx2g" \
+    -Dhttp.socketTimeout=60000 \
+    -Dhttp.connectionTimeout=60000)
 
 COPY src ./src
 
 RUN gradle clean build -x test --no-daemon \
-    -Dorg.gradle.jvmargs="-Xmx2g -Djava.awt.headless=true"
+    -Dorg.gradle.jvmargs="-Xmx2g -Djava.awt.headless=true" \
+    -Dhttp.socketTimeout=60000 \
+    -Dhttp.connectionTimeout=60000
 
 # ====== Runtime stage ======
 FROM eclipse-temurin:21-jre-alpine AS runtime

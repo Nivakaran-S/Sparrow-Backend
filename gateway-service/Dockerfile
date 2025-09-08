@@ -1,57 +1,37 @@
-# Multi-stage build for Spring Boot Gateway Service
-FROM gradle:8.14.3-jdk17 AS build
-
-# Set working directory
+# ====== Build stage ======
+FROM gradle:8.9-jdk17 AS build
 WORKDIR /app
 
-# Copy gradle files
+RUN apt-get update && apt-get install -y ca-certificates wget unzip && rm -rf /var/lib/apt/lists/*
+
 COPY build.gradle settings.gradle ./
 COPY gradle ./gradle
-COPY gradlew ./
 
-# Make gradlew executable
-RUN chmod +x ./gradlew
+RUN gradle dependencies --refresh-dependencies
 
-# Download dependencies (this layer will be cached unless build files change)
-RUN ./gradlew dependencies --no-daemon
-
-# Copy source code
 COPY src ./src
 
-# Build the application
-RUN ./gradlew build -x test --no-daemon
+RUN gradle clean build -x test --no-daemon \
+    -Dorg.gradle.jvmargs="-Xmx2g -Djava.awt.headless=true"
 
-# Runtime stage
-FROM openjdk:17-jdk-slim
-
-# Install curl for health checks
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
-
-# Create app directory
+# ====== Runtime stage ======
+FROM eclipse-temurin:21-jre-alpine AS runtime
 WORKDIR /app
 
-# Create non-root user
-RUN addgroup --system --gid 1001 appuser && \
-    adduser --system --uid 1001 --group appuser
+RUN apk add --no-cache ca-certificates wget
 
-# Copy jar from build stage
-COPY --from=build /app/build/libs/gateway-service-*.jar app.jar
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring
 
-# Create config directory
-RUN mkdir -p /app/config && chown -R appuser:appuser /app
+COPY --from=build /app/build/libs/*.jar /app/app.jar
 
-# Switch to non-root user
-USER appuser
+ENV JAVA_OPTS="-XX:+UseZGC -XX:MaxRAMPercentage=75.0"
+ENV SERVER_PORT=8080
 
-# Expose port
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8080/actuator/health || exit 1
+HEALTHCHECK --interval=20s --timeout=3s --retries=5 --start-period=20s \
+  CMD wget -qO- http://localhost:${SERVER_PORT}/actuator/health | grep -q '"status":"UP"' || exit 1
 
-# Set JVM options for container
-ENV JAVA_OPTS="-Xmx512m -Xms256m -Djava.security.egd=file:/dev/./urandom"
-
-# Run the application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+# Entry point
+ENTRYPOINT ["/bin/sh","-c","java $JAVA_OPTS -jar /app/app.jar"]

@@ -4,7 +4,7 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y ca-certificates wget unzip && rm -rf /var/lib/apt/lists/*
 
-COPY build.gradle settings.gradle gradle.properties ./
+COPY build.gradle settings.gradle ./
 COPY gradle ./gradle
 
 RUN gradle dependencies --refresh-dependencies
