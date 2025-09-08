@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   # ==== DATABASE SERVICES ====
   postgres:
@@ -13,12 +15,11 @@ services:
       - backend
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U keycloak -d keycloak || exit 1" ]
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak || exit 1"]
       interval: 20s
       timeout: 10s
       retries: 5
       start_period: 30s
-
 
   mongo:
     image: mongo:7.0
@@ -40,7 +41,6 @@ services:
       timeout: 10s
       retries: 3
 
-  # ==== REDIS ====
   redis:
     image: redis:7-alpine
     container_name: redis-cache
@@ -106,10 +106,12 @@ services:
       - backend
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      test: [ "CMD-SHELL", "kafka-broker-api-versions --bootstrap-server kafka:29092 || exit 1" ]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 10
+      start_period: 60s
+
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -128,41 +130,29 @@ services:
     restart: unless-stopped
 
   # ==== KEYCLOAK ====
-  # ==== KEYCLOAK - FIXED VERSION ====
   keycloak:
     image: quay.io/keycloak/keycloak:22.0
     container_name: keycloak
     environment:
-      # Database configuration
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: keycloak_password
 
-      # Hostname configuration - FIXED
-      KC_HOSTNAME: keycloak  # Use container name instead of localhost
+      KC_HOSTNAME: keycloak
       KC_HOSTNAME_PORT: 8080
       KC_HOSTNAME_STRICT: false
       KC_HOSTNAME_STRICT_HTTPS: false
-      KC_HTTP_ENABLED: true  # Explicitly enable HTTP for dev
+      KC_HTTP_ENABLED: true
 
-      # Logging and monitoring
-      KC_LOG_LEVEL: info
-      KC_METRICS_ENABLED: true
-      KC_HEALTH_ENABLED: true
-
-      # Admin user
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
-
-      # JVM settings - ADDED for memory management
-      JAVA_OPTS_APPEND: "-Xms512m -Xmx1024m"
+      JAVA_OPTS_APPEND: "-Xms1024m -Xmx2048m"  # Increased memory
 
     command: start-dev --http-enabled=true --hostname-strict=false
 
     ports:
       - "8080:8080"
-
 
     depends_on:
       postgres:
@@ -173,15 +163,26 @@ services:
 
     restart: unless-stopped
 
-    # FIXED health check
     healthcheck:
-      test: |
-        timeout 10s bash -c ':> /dev/tcp/127.0.0.1/8080' || exit 1
+      test: [ "CMD-SHELL", "timeout 10s bash -c '</dev/tcp/localhost/8080'" ]
       interval: 30s
-      timeout: 15s
-      retries: 8
-      start_period: 120s  # Increased start period
+      timeout: 10s
+      retries: 30
+      start_period: 120s
 
+
+  # ==== SWAGGER UI ====
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    ports:
+      - "8081:8080"
+    environment:
+      SWAGGER_JSON: "http://spring-service:8080/v3/api-docs"
+      SWAGGER_CONFIG_URL: ./config/swagger-config.json
+    volumes:
+      - ./swagger-config.json:/usr/share/nginx/html/swagger-config.json
+    networks:
+      - backend
 
   # ==== SPRING BOOT SERVICES ====
   user-service:

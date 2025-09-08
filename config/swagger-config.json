@@ -1,0 +1,33 @@
+{
+  "urls": [
+    {
+      "url": "http://user-service:8080/v3/api-docs",
+      "name": "User Service"
+    },
+    {
+      "url": "http://parcel-service:8080/v3/api-docs",
+      "name": "Parcel Service"
+    },
+    {
+      "url": "http://tracking-service:8080/v3/api-docs",
+      "name": "Tracking Service"
+    },
+    {
+      "url": "http://notification-service:8080/v3/api-docs",
+      "name": "Notification Service"
+    },
+    {
+      "url": "http://location-service:8080/v3/api-docs",
+      "name": "Location Service"
+    },
+    {
+      "url": "http://chatbot-service:8080/openapi.json",
+      "name": "Chatbot Service"
+    },
+    {
+      "url": "http://eta-service:8080/openapi.json",
+      "name": "ETA Service"
+    }
+  ],
+  "validatorUrl": null
+}
